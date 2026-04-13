@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Synth Playground</title>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+    
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #111; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; }
+        
+        /* The 3D Canvas takes up the right side */
+        #canvas-container { flex-grow: 1; height: 100vh; position: relative; }
+        #renderCanvas { width: 100%; height: 100%; touch-action: none; outline: none; }
+        
+        /* The Ableton-style Dashboard on the left */
+        #dashboard { width: 350px; height: 100vh; background: #222; border-right: 2px solid #444; padding: 20px; box-sizing: border-box; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+        
+        .panel { background: #333; padding: 15px; border-radius: 6px; border: 1px solid #555; }
+        .panel h3 { margin: 0 0 15px 0; font-size: 14px; text-transform: uppercase; color: #00ffcc; letter-spacing: 1px; }
+        
+        .control-group { margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+        .control-group label { font-size: 12px; color: #ccc; width: 60px; }
+        .control-group input[type="range"] { flex-grow: 1; margin-left: 10px; accent-color: #ff00aa; }
+        
+        button#start-btn { width: 100%; padding: 15px; font-size: 16px; font-weight: bold; background: #00ffcc; color: #000; border: none; border-radius: 4px; cursor: pointer; text-transform: uppercase; }
+        button#start-btn:hover { background: #00e6b8; }
+        
+        #overlay-data { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 4px; font-family: monospace; color: #ff00aa; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+    <div id="dashboard">
+        <button id="start-btn">Power On Synth</button>
+        
+        <div id="synth-controls" style="display: none; flex-direction: column; gap: 20px;">
+            
+            <div class="panel">
+                <h3>Envelope (ADSR)</h3>
+                <div class="control-group"><label>Attack</label><input type="range" id="env-a" min="0" max="100" value="10"></div>
+                <div class="control-group"><label>Decay</label><input type="range" id="env-d" min="0" max="100" value="50"></div>
+                <div class="control-group"><label>Sustain</label><input type="range" id="env-s" min="0" max="100" value="80"></div>
+                <div class="control-group"><label>Release</label><input type="range" id="env-r" min="0" max="100" value="30"></div>
+            </div>
+
+            <div class="panel">
+                <h3>Filter</h3>
+                <div class="control-group"><label>Cutoff</label><input type="range" id="filt-c" min="0" max="100" value="80"></div>
+                <div class="control-group"><label>Res</label><input type="range" id="filt-r" min="0" max="100" value="20"></div>
+            </div>
+            
+            <div class="panel">
+                <h3>XY Pad Routing</h3>
+                <select id="map-mode" style="width: 100%; padding: 8px; background: #111; color: #00ffcc; border: 1px solid #555;">
+                    <option value="pitch_amp">X = Pitch | Y = Volume</option>
+                    <option value="cutoff_res">X = Cutoff | Y = Resonance</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div id="canvas-container">
+        <div id="overlay-data">X: 0.00 | Y: 0.00</div>
+        <canvas id="renderCanvas"></canvas>
+    </div>
+
+    <script src="audio.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
