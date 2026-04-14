@@ -1,68 +1,41 @@
 const audioContext = new AudioContext();
-let pannerNode;
-let ampNode; // NEW: Dedicated volume control
-let synthInstance, delayInstance, reverbInstance, distortionInstance;
+let ampNode;  
+let synthInstance;
 
 async function initAudioEngine() {
   const hostGroupId = await setupWamHost();
-  
   synthInstance = await loadDynamicComponent("https://wam-4tt.pages.dev/Pro54/index.js", hostGroupId);
-  distortionInstance = await loadDynamicComponent("https://www.webaudiomodules.com/community/plugins/burns-audio/distortion/index.js", hostGroupId);
-  delayInstance = await loadDynamicComponent("https://www.webaudiomodules.com/community/plugins/wimmics/pingpongdelay/dist/index.js", hostGroupId);
-  reverbInstance = await loadDynamicComponent("https://www.webaudiomodules.com/community/plugins/wimmics/greyhole/index.js", hostGroupId);
 
-  // --- ABLETON 'GET STARTED' PATCH INIT (PRO54 MAPPED) ---
+  // --- THICK ANALOG PATCH INIT ---
   synthInstance.audioNode.setParameterValues({
+    "OscASaw": { value: 1 },        
+    "MixerOscALevel": { value: 100 },
+    "OscBShapeTri": { value: 1 },   
+    "OscBFreqFine": { value: 52 },  
+    "MixerOscBLevel": { value: 80 },
     
-    // --- OSCILLATOR A (Bright Sawtooth) ---
-    "OscASaw": { value: 1 },        // Turn Sawtooth ON
-    "OscAPulse": { value: 0 },      // Turn Pulse OFF
-    "MixerOscALevel": { value: 80 },// Set level high
+    "FilterCutoff": { value: 100 },     // FIX: Ensure the filter starts WIDE OPEN
+    "FilterEnvAmt": { value: 0 },       
     
-    // --- OSCILLATOR B (Sub/Triangle) ---
-    "OscBShapeTri": { value: 1 },   // Turn Triangle ON (for deep, clean sub-bass)
-    "OscBShapeSaw": { value: 0 },   // Turn Sawtooth OFF
-    "OscBShapePulse": { value: 0 }, // Turn Pulse OFF
-    "OscBFreqFine": { value: 50 },  // 50 is perfectly centered/in-tune on the Pro54
-    "MixerOscBLevel": { value: 80 },// Match Osc A level
+    // Utilize the synth's actual ADSR envelope
+    "AmplifierAttack": { value: 10 },   // 10ms quick fade in  
+    "AmplifierDecay": { value: 100 },    
+    "AmplifierSustain": { value: 100 }, 
+    "Release": { value: 0.5 },          // Smooth 500ms fade out on release
     
-    // --- THE ENVELOPE (Mapped to 0-100 scale) ---
-    "AmplifierAttack": { value: 0 },    // 0 = Instant, snappy attack
-    "AmplifierDecay": { value: 50 },    // Mid-length decay
-    "AmplifierSustain": { value: 100 }, // Full sustain volume while held
-    "AmplifierRelease": { value: 40 },  // Smooth fade out (acts as your 0.4)
-    "Release": { value: 1 },            // Global release switch MUST be 1 for AmplifierRelease to work
-    
-    // --- THE FILTER ---
-    "FilterResonance": { value: 35 }, 
-    "FilterEnvAmt": { value: 0 },       // Set to 0 so the internal envelope doesn't fight your Y-axis mouse modulation
-    "FilterKeyboardTracking": { value: 100 }, // Ensures the filter opens up as you play higher notes
-    
-    // --- THE GLIDE (Theremin Pitch Slide) ---
-    "Glide": { value: 65 }, 
-    
-    // --- SYSTEM CLEANUP (Disable internal noise/drift for a pure tone) ---
-    "Analog": { value: 0 },             // Disables the vintage pitch-drift emulation
-    "DelayON": { value: 0 },            // Disables the Pro54's internal delay (since you have the PingPong WAM)
-    "PolyModOscB": { value: 0 },        // Disables cross-modulation interference
-    "MixerNoiseLevel": { value: 0 }     // Ensures the noise generator is muted
+    "Analog": { value: 20 },            
+    "DelayON": { value: 0 },            
+    "MixerNoiseLevel": { value: 0 }     
   });
 
-  pannerNode = audioContext.createStereoPanner();
-  
-  // NEW: Create the amplitude control node
   ampNode = audioContext.createGain();
-  ampNode.gain.value = 0.5; // Start at 50% volume
+  ampNode.gain.value = 1.0; 
   
-  // Update Signal Chain: Synth -> AMP -> Distortion -> Panner -> Delay -> Reverb -> Out
+  // Clean Signal Chain: Synth -> Amp (Matrix) -> Output
   synthInstance.audioNode.connect(ampNode);
-  ampNode.connect(distortionInstance.audioNode);
-  distortionInstance.audioNode.connect(pannerNode);
-  pannerNode.connect(delayInstance.audioNode);
-  delayInstance.audioNode.connect(reverbInstance.audioNode);
-  reverbInstance.audioNode.connect(audioContext.destination);
+  ampNode.connect(audioContext.destination);
 
-  console.log("Audio Engine Connected.");
+  console.log("Pure Pro54 Audio Engine Connected.");
 }
 
 async function setupWamHost() {
@@ -78,11 +51,17 @@ async function loadDynamicComponent(wamURI, hostGroupId) {
   } catch (error) { console.error("Error loading WAM:", error); }
 }
 
-function triggerDroneNote() {
-  if (synthInstance && synthInstance.audioNode) {
-    let now = audioContext.currentTime;
-    // Play a low C (MIDI 36)
-    synthInstance.audioNode.scheduleEvents({ type: 'wam-midi', time: now, data: { bytes: new Uint8Array([0x80, 36, 100]) } });
-    synthInstance.audioNode.scheduleEvents({ type: 'wam-midi', time: now + 0.05, data: { bytes: new Uint8Array([0x90, 36, 100]) } });
-  }
+// --- TRUE MIDI TRIGGERS ---
+function playNote() {
+  if (!synthInstance) return;
+  let now = audioContext.currentTime;
+  // Send Note On (MIDI 48 is C3)
+  synthInstance.audioNode.scheduleEvents({ type: 'wam-midi', time: now, data: { bytes: new Uint8Array([0x90, 48, 100]) } });
+}
+
+function stopNote() {
+  if (!synthInstance) return;
+  let now = audioContext.currentTime;
+  // Send Note Off
+  synthInstance.audioNode.scheduleEvents({ type: 'wam-midi', time: now, data: { bytes: new Uint8Array([0x80, 48, 100]) } });
 }
