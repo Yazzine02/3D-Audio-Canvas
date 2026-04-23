@@ -1,45 +1,41 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Synth Playground</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>3D Steering Audio Engine</title>
+
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
-    
+    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+    <script src="https://cdn.babylonjs.com/gui/babylon.gui.min.js"></script>
+
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #111; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; }
         
-        #canvas-container { flex-grow: 1; height: 100vh; position: relative; }
-        #renderCanvas { width: 100%; height: 100%; touch-action: none; outline: none; }
-        
-        #dashboard { width: 380px; height: 100vh; background: #222; border-right: 2px solid #444; padding: 20px; box-sizing: border-box; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
-        
+        #dashboard { width: 380px; height: 100vh; background: #222; border-right: 2px solid #444; padding: 20px; box-sizing: border-box; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; z-index: 20; }
         .panel { background: #333; padding: 15px; border-radius: 6px; border: 1px solid #555; }
         .panel h3 { margin: 0 0 15px 0; font-size: 14px; text-transform: uppercase; color: #00ffcc; letter-spacing: 1px; }
         
         button#start-btn { width: 100%; padding: 15px; font-size: 16px; font-weight: bold; background: #00ffcc; color: #000; border: none; border-radius: 4px; cursor: pointer; text-transform: uppercase; }
         button#start-btn:hover { background: #00e6b8; }
         
-        #overlay-data { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 4px; font-family: monospace; color: #ff00aa; pointer-events: none; }
-
-        /* Styles for our dynamic routing grid */
         .route-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #444; }
         .route-label { font-size: 13px; color: #ddd; flex-grow: 1; }
         .route-btns { display: flex; gap: 5px; }
         .btn-axis { width: 30px; height: 30px; background: #222; color: #888; border: 1px solid #555; border-radius: 4px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        
-        /* Active states for X and Y assignments */
         .btn-axis.active-x { background: #00ffcc; color: #000; border-color: #00ffcc; }
         .btn-axis.active-y { background: #ff00aa; color: #000; border-color: #ff00aa; }
 
+        #canvas-container { flex-grow: 1; height: 100vh; position: relative; }
+        #renderCanvas { width: 100%; height: 100%; touch-action: none; outline: none; }
+        #overlay-data { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 4px; font-family: monospace; color: #ff00aa; pointer-events: none; }
     </style>
-</head>
-<body>
-
+  </head>
+  <body>
+    
     <div id="dashboard">
         <button id="start-btn">Power On Synth</button>
-        
         <div id="synth-controls" style="display: none; flex-direction: column; gap: 20px;">
             <div class="panel">
                 <h3>XY Routing Matrix</h3>
@@ -54,6 +50,9 @@
     </div>
 
     <script src="audio.js"></script>
-    <script src="app.js"></script>
-</body>
+    <script src="BehaviorManager.js"></script>
+    <script src="SteeringVehicle.js"></script>
+    <script src="BabylonGUI.js"></script>
+    <script src="BabylonApp.js"></script>
+  </body>
 </html>
